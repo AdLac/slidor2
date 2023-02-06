@@ -2,3 +2,4 @@ openai
 python-pptx
 pandas
 streamlit
+google-cloud-storage

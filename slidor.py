@@ -79,7 +79,7 @@ st.success("The modified presentation has been saved!")
 
 with open("template nexus modified.pptx", "rb") as file:
   btn = st.download_button(
-    label="Download image",
+    label="Télécharger la présentation",
     data=file,
     file_name="template nexus modified.pptx",
     mime='application/octet-stream',

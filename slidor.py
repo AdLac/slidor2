@@ -23,7 +23,7 @@ slide_layout = prs.slide_layouts[12]
 # Load keywords from file
 st.subheader('Générer les slides, 1 ligne = 1 titre de slide')
 contexte = st.text_area("Le contexte permets d'obtenir des résultats plus précis,'tu travailles pour ce client...'")
-keywords = st.text_area('1 ligne, 1 titre')
+keywords = st.text_area('1 ligne, 1 titr')
 
 if keywords:
     keywords = keywords.split("\n")

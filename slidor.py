@@ -78,7 +78,7 @@ def main():
         prs.save('template nexus modified.pptx')
         st.success("The modified presentation has been saved!")
 
-        with open("template nexus modified.pptx", "rb") as file:
+        with open("template nexus v2.pptx", "rb") as file:
             btn = st.download_button(
                 label="Download image",
                 data=file,

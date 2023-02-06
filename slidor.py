@@ -15,7 +15,7 @@ openai.api_key = st.secrets["OPENAI_API_KEY"]
 st.title('Slide Generator :sunglasses:')
 
 # Load presentation template
-prs = Presentation('/content/template nexus.pptx')
+prs = Presentation('template nexus.pptx')
 # Define slide layout
 slide_layout = prs.slide_layouts[12]
 

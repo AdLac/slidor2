@@ -35,7 +35,7 @@ def main():
 
             # Create prompt for OpenAI completion
             prompt2 = (
-                    f"En te basant sur ce contexte: {contexte}  = Rédige le titre d'une slide ainsi que un commentaire complet et détaillé de slide powerpoint  à partir de cette idée:  \"" + keyword +"\", utilise le format suivant pour le titre <T>titre-généré-ici</T> et le format suivant pour le commentaire <C>commentaire-généré-ici</C>"
+                    f"{contexte} Rédige un titre ainsi qu'un commentaire complet et détaillé à partir de cette idée:  \"" + keyword +"\", utilise le format suivant pour le titre <T>titre-généré-ici</T> et le format suivant pour le commentaire <C>commentaire-généré-ici</C>"
                       )
 
             # Get content from OpenAI

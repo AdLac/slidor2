@@ -1,46 +1,46 @@
-import os
 import openai
-import csv
 import time
 import pandas as pd
 from pptx import Presentation
-from pptx.util import Inches
-from pptx.enum.text import MSO_ANCHOR, MSO_AUTO_SIZE
 import streamlit as st
 
 # OpenAI API Key
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 def main():
     # Titre
-    st.title('Slide Generator :sunglasses:')
+    st.title('Slide Generator 😎')
 
     # Load presentation template
     prs = Presentation('template nexus.pptx')
-    # Define slide layout
     slide_layout = prs.slide_layouts[12]
 
     # Load keywords from file
     st.subheader('Générer les slides, 1 ligne = 1 titre de slide')
-    contexte = st.text_area("Le contexte permets d'obtenir des résultats plus précis,'tu travailles pour ce client...'")
+    contexte = st.text_area("Le contexte permet d'obtenir des résultats plus précis, ex: 'tu travailles pour ce client...'")
     keywords = st.text_area('1 ligne, 1 titre')
 
     if keywords:
         keywords = keywords.split("\n")
         counter = 0
         rows = []
+
         for keyword in keywords:
             keyword = keyword.strip()
-            counter = counter + 1
-
+            if not keyword:
+                continue
+            
+            counter += 1
+            
             # Create prompt for OpenAI completion
             prompt2 = (
-                    f"{contexte} Rédige un titre ainsi qu'un commentaire complet et détaillé à partir de cette idée:  \"" + keyword +"\", utilise le format suivant pour le titre <T>titre-généré-ici</T> et le format suivant pour le commentaire <C>commentaire-généré-ici</C>"
-                      )
+                f"{contexte} Rédige un titre ainsi qu'un commentaire complet et détaillé à partir de cette idée :  \"{keyword}\"."
+                " Utilise le format suivant pour le titre <T>titre-généré-ici</T> et pour le commentaire <C>commentaire-généré-ici</C>."
+            )
 
             # Get content from OpenAI
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
+            response = client.chat.completions.create(
+                model="gpt-4",
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant."},
                     {"role": "user", "content": prompt2}
@@ -53,40 +53,33 @@ def main():
             )
 
             content = response.choices[0].message.content
-            title, body = content.split("<T>")[1].split("</T>")[0], content.split("<C>")[1].split("</C>")[0]
+            try:
+                title = content.split("<T>")[1].split("</T>")[0]
+                body = content.split("<C>")[1].split("</C>")[0]
+            except IndexError:
+                st.error("Erreur dans la réponse AI, format incorrect.")
+                continue
 
             rows.append([keyword, title, body])
 
             slide = prs.slides.add_slide(slide_layout)
+            slide.placeholders[0].text = title
+            slide.placeholders[11].text = title
+            slide.placeholders[21].text = body
 
-            Presentation_Title = slide.placeholders[0]
-            Presentation_Title.text = title
+            print(f"{counter} complet.")
+            time.sleep(0.5)  # Pause pour éviter de spammer l'API
 
-            #Add subtitle to slide
-            Presentation_Subtitle = slide.placeholders[11]
-            Presentation_Subtitle.text = title
+        st.text(f"{counter} complet.")
+        prs.save('template_nexus_modified.pptx')
+        st.success("La présentation modifiée a été enregistrée !")
 
-            #Add body to slide
-            Presentation_body = slide.placeholders[21]
-            Presentation_body.text = body
-
-            #Print progress
-            print(str(counter) + " complete.")
-
-            #Sleep to avoid spamming the API
-            time.sleep(0.5)
-
-        #Save the modified presentation
-        st.text(str(counter) + " complete.")
-        prs.save('template nexus modified.pptx')
-        st.success("The modified presentation has been saved!")
-
-        with open("template nexus modified.pptx", "rb") as file:
-            btn = st.download_button(
-                label="Télécharger la prez",
+        with open("template_nexus_modified.pptx", "rb") as file:
+            st.download_button(
+                label="Télécharger la présentation",
                 data=file,
-                file_name="template nexus modified.pptx",
-                mime='application/octet-stream',
+                file_name="template_nexus_modified.pptx",
+                mime='application/octet-stream'
             )
 
 if __name__ == '__main__':

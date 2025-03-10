@@ -38,7 +38,7 @@ def main():
             # Créer le prompt pour l'API OpenAI
             prompt = (
                 f"{contexte}\n\n"
-                f"Rédige un titre ainsi qu'un commentaire complet et détaillé à partir de cette idée : \"{keyword}\". "
+                f"Rédige un titre ainsi qu'un commentaire à partir de cette idée : \"{keyword}\". "
                 "Utilise le format suivant pour le titre : <T>titre-généré-ici</T> et pour le commentaire : <C>commentaire-généré-ici</C>."
             )
 

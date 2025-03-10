@@ -39,9 +39,12 @@ def main():
                       )
 
             # Get content from OpenAI
-            response = openai.Completion.create(
-                engine="text-davinci-003",
-                prompt=prompt2,
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": prompt2}
+                ],
                 temperature=0.7,
                 max_tokens=500,
                 top_p=1,
@@ -49,7 +52,7 @@ def main():
                 presence_penalty=0
             )
 
-            content = response.choices[0].text
+            content = response.choices[0].message.content
             title, body = content.split("<T>")[1].split("</T>")[0], content.split("<C>")[1].split("</C>")[0]
 
             rows.append([keyword, title, body])
@@ -85,5 +88,6 @@ def main():
                 file_name="template nexus modified.pptx",
                 mime='application/octet-stream',
             )
+
 if __name__ == '__main__':
     main()

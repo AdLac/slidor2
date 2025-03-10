@@ -4,7 +4,7 @@ from pptx import Presentation
 import streamlit as st
 
 # Clé API OpenAI
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 def main():
     # Titre de l'application
@@ -44,8 +44,8 @@ def main():
 
             # Appel à l'API OpenAI
             try:
-                response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
+                response = client.chat.completions.create(
+                    model="gpt-4-turbo",
                     messages=[
                         {"role": "system", "content": "Vous êtes un assistant utile."},
                         {"role": "user", "content": prompt}
@@ -60,14 +60,14 @@ def main():
                 st.error(f"Erreur lors de l'appel à l'API OpenAI pour le mot-clé '{keyword}' : {e}")
                 continue
 
-            content = response.choices[0].message['content']
+            content = response.choices[0].message.content
 
             # Extraire le titre et le commentaire
             try:
                 title = content.split("<T>")[1].split("</T>")[0].strip()
                 body = content.split("<C>")[1].split("</C>")[0].strip()
             except IndexError:
-                st.error(f"Le format de la réponse pour le mot-clé '{keyword}' est incorrect. Assurez-vous que le modèle renvoie le titre et le commentaire dans les balises appropriées.")
+                st.error(f"Le format de la réponse pour le mot-clé '{keyword}' est incorrect.")
                 continue
 
             # Ajouter une diapositive à la présentation

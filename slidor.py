@@ -12,7 +12,7 @@ def main():
 
     # Charger le modèle de présentation
     try:
-        prs = Presentation('template_nexus.pptx')
+        prs = Presentation('template nexus.pptx')
     except Exception as e:
         st.error(f"Erreur lors du chargement du modèle de présentation : {e}")
         return

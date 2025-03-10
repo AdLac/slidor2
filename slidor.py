@@ -1,85 +1,107 @@
 import openai
 import time
-import pandas as pd
 from pptx import Presentation
 import streamlit as st
 
-# OpenAI API Key
-client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+# Clé API OpenAI
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 def main():
-    # Titre
-    st.title('Slide Generator 😎')
+    # Titre de l'application
+    st.title('Générateur de Slides :sunglasses:')
 
-    # Load presentation template
-    prs = Presentation('template nexus.pptx')
+    # Charger le modèle de présentation
+    try:
+        prs = Presentation('template_nexus.pptx')
+    except Exception as e:
+        st.error(f"Erreur lors du chargement du modèle de présentation : {e}")
+        return
+
+    # Définir la mise en page des diapositives
     slide_layout = prs.slide_layouts[12]
 
-    # Load keywords from file
-    st.subheader('Générer les slides, 1 ligne = 1 titre de slide')
-    contexte = st.text_area("Le contexte permet d'obtenir des résultats plus précis, ex: 'tu travailles pour ce client...'")
-    keywords = st.text_area('1 ligne, 1 titre')
+    # Section pour l'entrée des mots-clés
+    st.subheader('Générer les diapositives : 1 ligne = 1 titre de diapositive')
+    contexte = st.text_area("Contexte (aide à obtenir des résultats plus précis, par exemple : 'Vous travaillez pour ce client...')")
+    keywords = st.text_area('Mots-clés (1 ligne, 1 titre)')
 
-    if keywords:
-        keywords = keywords.split("\n")
+    if st.button('Générer les diapositives') and keywords:
+        keywords = [kw.strip() for kw in keywords.split("\n") if kw.strip()]
+        if not keywords:
+            st.warning("Veuillez entrer au moins un mot-clé valide.")
+            return
+
         counter = 0
-        rows = []
-
         for keyword in keywords:
-            keyword = keyword.strip()
-            if not keyword:
-                continue
-            
             counter += 1
-            
-            # Create prompt for OpenAI completion
-            prompt2 = (
-                f"{contexte} Rédige un titre ainsi qu'un commentaire complet et détaillé à partir de cette idée :  \"{keyword}\"."
-                " Utilise le format suivant pour le titre <T>titre-généré-ici</T> et pour le commentaire <C>commentaire-généré-ici</C>."
+
+            # Créer le prompt pour l'API OpenAI
+            prompt = (
+                f"{contexte}\n\n"
+                f"Rédige un titre ainsi qu'un commentaire complet et détaillé à partir de cette idée : \"{keyword}\". "
+                "Utilise le format suivant pour le titre : <T>titre-généré-ici</T> et pour le commentaire : <C>commentaire-généré-ici</C>."
             )
 
-            # Get content from OpenAI
-            response = client.chat.completions.create(
-                model="gpt-4",
-                messages=[
-                    {"role": "system", "content": "You are a helpful assistant."},
-                    {"role": "user", "content": prompt2}
-                ],
-                temperature=0.7,
-                max_tokens=500,
-                top_p=1,
-                frequency_penalty=0,
-                presence_penalty=0
-            )
-
-            content = response.choices[0].message.content
+            # Appel à l'API OpenAI
             try:
-                title = content.split("<T>")[1].split("</T>")[0]
-                body = content.split("<C>")[1].split("</C>")[0]
-            except IndexError:
-                st.error("Erreur dans la réponse AI, format incorrect.")
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": "Vous êtes un assistant utile."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.7,
+                    max_tokens=500,
+                    top_p=1,
+                    frequency_penalty=0,
+                    presence_penalty=0
+                )
+            except Exception as e:
+                st.error(f"Erreur lors de l'appel à l'API OpenAI pour le mot-clé '{keyword}' : {e}")
                 continue
 
-            rows.append([keyword, title, body])
+            content = response.choices[0].message['content']
 
+            # Extraire le titre et le commentaire
+            try:
+                title = content.split("<T>")[1].split("</T>")[0].strip()
+                body = content.split("<C>")[1].split("</C>")[0].strip()
+            except IndexError:
+                st.error(f"Le format de la réponse pour le mot-clé '{keyword}' est incorrect. Assurez-vous que le modèle renvoie le titre et le commentaire dans les balises appropriées.")
+                continue
+
+            # Ajouter une diapositive à la présentation
             slide = prs.slides.add_slide(slide_layout)
-            slide.placeholders[0].text = title
-            slide.placeholders[11].text = title
-            slide.placeholders[21].text = body
+            try:
+                slide.placeholders[0].text = title  # Titre de la diapositive
+                slide.placeholders[11].text = title  # Sous-titre de la diapositive
+                slide.placeholders[21].text = body   # Contenu de la diapositive
+            except IndexError as e:
+                st.error(f"Erreur lors de l'ajout de contenu à la diapositive pour le mot-clé '{keyword}' : {e}")
+                continue
 
-            print(f"{counter} complet.")
-            time.sleep(0.5)  # Pause pour éviter de spammer l'API
+            # Afficher la progression
+            st.text(f"{counter} diapositive(s) générée(s).")
 
-        st.text(f"{counter} complet.")
-        prs.save('template_nexus_modified.pptx')
-        st.success("La présentation modifiée a été enregistrée !")
+            # Pause pour éviter de surcharger l'API
+            time.sleep(0.5)
 
-        with open("template_nexus_modified.pptx", "rb") as file:
+        # Enregistrer la présentation modifiée
+        output_file = 'template_nexus_modified.pptx'
+        try:
+            prs.save(output_file)
+            st.success(f"La présentation modifiée a été enregistrée sous '{output_file}' !")
+        except Exception as e:
+            st.error(f"Erreur lors de l'enregistrement de la présentation : {e}")
+            return
+
+        # Bouton de téléchargement
+        with open(output_file, "rb") as file:
             st.download_button(
                 label="Télécharger la présentation",
                 data=file,
-                file_name="template_nexus_modified.pptx",
-                mime='application/octet-stream'
+                file_name=output_file,
+                mime='application/vnd.openxmlformats-officedocument.presentationml.presentation',
             )
 
 if __name__ == '__main__':
